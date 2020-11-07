@@ -9,7 +9,7 @@ settings = dict(
 
     # 'keepup'  Keeping up with recent messages, some messages might be skipped.
     # 'queue'   Queuing up messages and says every message.
-    MODE = 'queue',
+    # 'multi'   Say multiple messages simultaneously.
 
     TMP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tmp')
 )
