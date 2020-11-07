@@ -1,32 +1,28 @@
 import os, socket, uuid
 from pydub import AudioSegment
 import simpleaudio as sa
+import config
 
+# Getting variables from config.py
+server = config.settings['server']
+port = config.settings['port']
+nickname = config.settings['nickname']
+token = config.settings['token']
+channel = config.settings['channel']
+MODE = config.settings['MODE']
+TMP_DIR = config.settings['TMP_DIR']
 
-server = 'irc.chat.twitch.tv'
-port = 6667
-nickname = '' #The bots nickname
-token = 'oauth:' #Get it from https://twitchapps.com/tmi/
-channel = '#' #Channel username like '#moistcr1tikal'
-
-# 'keepup'  Keeping up with recent messages, some messages might be skipped.
-# 'queue'   Queuing up messages and says every message.
-MODE = 'queue'
-
-TMP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tmp')
+# Makes temporary dirs if they dont exist
 if not os.path.exists(TMP_DIR):
     os.makedirs(TMP_DIR)
 
 sock = socket.socket()
 sock.connect((server, port))
-
 sock.send(f"PASS {token}\n".encode('utf-8'))
 sock.send(f"NICK {nickname}\n".encode('utf-8'))
 sock.send(f"JOIN {channel}\n".encode('utf-8'))
 resp = sock.recv(2048).decode('utf-8')
 resp = sock.recv(2048).decode('utf-8')
-
-
 
 def say_single_message(message):
     session = str(uuid.uuid1())
@@ -56,7 +52,6 @@ def run_singlethread():
     sock.close()
 
 def run_queue_single():
-    
     while True:
         try:
             resp = sock.recv(2048).decode('utf-8')
@@ -68,7 +63,6 @@ def run_queue_single():
             pass
 
 if __name__ ==  '__main__':
-
     if MODE == 'keepup':
         run_singlethread()
     elif MODE == 'queue':
