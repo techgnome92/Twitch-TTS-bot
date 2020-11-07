@@ -2,6 +2,7 @@ import os, socket, uuid
 from pydub import AudioSegment
 import simpleaudio as sa
 import config
+import threading
 
 # Getting variables from config.py
 server = config.settings['server']
@@ -62,10 +63,23 @@ def run_queue_single():
         except Exception:
             pass
 
+def run_multithread():
+    while True:
+        try:
+            resp = sock.recv(2048).decode('utf-8')
+            for line in resp.split('\n'):
+                message = line.split(':',2)[2]
+                threading.Thread(target=say_single_message, args=(message,)).start()
+            
+        except Exception:
+            pass
+
 if __name__ ==  '__main__':
     if MODE == 'keepup':
         run_singlethread()
     elif MODE == 'queue':
         run_queue_single()
+    elif MODE == 'multi':
+        run_multithread()
     else:
         print('Please select a mode by editing the MODE variable ')
