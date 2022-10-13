@@ -10,6 +10,9 @@ settings = dict(
     # 'keepup'  Keeping up with recent messages, some messages might be skipped.
     # 'queue'   Queuing up messages and says every message.
     # 'multi'   Say multiple messages simultaneously.
+    MODE = 'multi',
+
+    IGNORE_LIST = ['streamelements', 'nightbot'],
 
     TMP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tmp')
 )

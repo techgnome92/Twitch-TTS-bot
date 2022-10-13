@@ -12,6 +12,7 @@ token = config.settings['token']
 channel = config.settings['channel']
 MODE = config.settings['MODE']
 TMP_DIR = config.settings['TMP_DIR']
+IGNORE_LIST = config.settings['IGNORE_LIST']
 
 # Makes temporary dirs if they dont exist
 if not os.path.exists(TMP_DIR):
@@ -68,8 +69,10 @@ def run_multithread():
         try:
             resp = sock.recv(2048).decode('utf-8')
             for line in resp.split('\n'):
-                message = line.split(':',2)[2]
-                threading.Thread(target=say_single_message, args=(message,)).start()
+                username = line.split(':',1)[1].split('!', 1)[0]
+                if username not in IGNORE_LIST:
+                    message = line.split(':',2)[2]
+                    threading.Thread(target=say_single_message, args=(message,)).start()
             
         except Exception:
             pass
