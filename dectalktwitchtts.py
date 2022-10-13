@@ -45,8 +45,11 @@ def run_singlethread():
     while True:
         try:
             resp = sock.recv(2048).decode('utf-8')
-            message = resp.split(':',2)[2]
-            say_single_message(message)
+            line = resp.split('\n')[0]
+            username = line.split(':',1)[1].split('!', 1)[0]
+            if username not in IGNORE_LIST:
+                message = line.split(':',2)[2]
+                say_single_message(message)
             
         except Exception:
             pass
@@ -58,8 +61,10 @@ def run_queue_single():
         try:
             resp = sock.recv(2048).decode('utf-8')
             for line in resp.split('\n'):
-                message = line.split(':',2)[2]
-                say_single_message(message)
+                username = line.split(':',1)[1].split('!', 1)[0]
+                if username not in IGNORE_LIST:
+                    message = line.split(':',2)[2]
+                    say_single_message(message)
             
         except Exception:
             pass
