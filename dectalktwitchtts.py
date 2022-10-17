@@ -49,12 +49,12 @@ def is_valid_line(line):
     if len(line) and not line.startswith("PING"):
         username = line.split(':',1)[1].split('!', 1)[0]
         if username not in IGNORE_LIST:
-            return true
+            return True
         else:
-            return false
+            return False
     elif line.startswith("PING"):
         sock.send(bytes("PONG :tmi.twitch.tv", "UTF-8"))
-        return false
+        return False
 
 def run_singlethread():
     while True:
