@@ -14,7 +14,12 @@ token = config.settings['token']
 channel = config.settings['channel']
 MODE = config.settings['MODE']
 TMP_DIR = config.settings['TMP_DIR']
-IGNORE_LIST = config.settings['IGNORE_LIST']
+USER_IGNORE_PATH = config.settings['USER_IGNORE_PATH']
+
+# Variables
+USER_IGNORE_LIST = []
+
+user_ignore_file_updated = 0
 
 # Makes temporary dirs if they dont exist
 if not os.path.exists(TMP_DIR):
@@ -47,9 +52,15 @@ def say_single_message(message):
         traceback.print_exc()
 
 def is_valid_line(line):
+    global user_ignore_file_updated
+
     if len(line) and not line.startswith("PING") and not line.startswith(":tmi.twitch.tv"):
         username = line.split(':',1)[1].split('!', 1)[0]
-        if username not in IGNORE_LIST:
+        if user_ignore_file_updated < os.stat(USER_IGNORE_PATH).st_mtime:
+            user_ignore_file_updated = os.stat(USER_IGNORE_PATH).st_mtime
+            load_user_ignore_list()
+
+        if username not in USER_IGNORE_LIST:
             return True
         else:
             return False
@@ -61,6 +72,15 @@ def ping_sender():
     while True:
         sock.send("PING :tmi.twitch.tv\r\n".encode())
         time.sleep(300)
+
+def load_user_ignore_list():
+    global USER_IGNORE_LIST
+
+    file = open(USER_IGNORE_PATH, "r")
+    file_content = file.read()
+    USER_IGNORE_LIST = file_content.split("\n")
+    while "" in USER_IGNORE_LIST:
+        USER_IGNORE_LIST.remove("")
 
 def run_singlethread():
     while True:

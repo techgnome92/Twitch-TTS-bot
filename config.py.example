@@ -1,5 +1,6 @@
 import os
 
+# Copy this to a file called "config.py" in the same path.
 settings = dict(
     server = 'irc.chat.twitch.tv',
     port = 6667,
@@ -12,7 +13,7 @@ settings = dict(
     # 'multi'   Say multiple messages simultaneously.
     MODE = 'multi',
 
-    IGNORE_LIST = ['streamelements', 'nightbot'],
+    USER_IGNORE_PATH = 'userignore.txt', # Path to file with usernames to ignore.
 
     TMP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tmp')
 )
