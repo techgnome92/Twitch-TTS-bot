@@ -1,10 +1,7 @@
-import os, socket, uuid
+import os, socket, uuid, time, re, traceback, threading
 from pydub import AudioSegment
 import simpleaudio as sa
 import config
-import threading
-import traceback
-import time
 
 # Getting variables from config.py
 server = config.settings['server']
@@ -15,11 +12,14 @@ channel = config.settings['channel']
 MODE = config.settings['MODE']
 TMP_DIR = config.settings['TMP_DIR']
 USER_IGNORE_PATH = config.settings['USER_IGNORE_PATH']
+WORD_IGNORE_PATH = config.settings['WORD_IGNORE_PATH']
 
 # Variables
 USER_IGNORE_LIST = []
+WORD_IGNORE_LIST = []
 
 user_ignore_file_updated = 0
+word_ignore_file_updated = 0
 
 # Makes temporary dirs if they dont exist
 if not os.path.exists(TMP_DIR):
@@ -52,13 +52,17 @@ def say_single_message(message):
         traceback.print_exc()
 
 def is_valid_line(line):
-    global user_ignore_file_updated
+    global user_ignore_file_updated, word_ignore_file_updated
 
     if len(line) and not line.startswith("PING") and not line.startswith(":tmi.twitch.tv"):
         username = line.split(':',1)[1].split('!', 1)[0]
         if user_ignore_file_updated < os.stat(USER_IGNORE_PATH).st_mtime:
             user_ignore_file_updated = os.stat(USER_IGNORE_PATH).st_mtime
             load_user_ignore_list()
+
+        if word_ignore_file_updated < os.stat(WORD_IGNORE_PATH).st_mtime:
+            word_ignore_file_updated = os.stat(WORD_IGNORE_PATH).st_mtime
+            load_word_ignore_list()
 
         if username not in USER_IGNORE_LIST:
             return True
@@ -67,6 +71,25 @@ def is_valid_line(line):
     elif line.startswith("PING"):
         sock.send("PONG :tmi.twitch.tv\r\n".encode())
         return False
+
+def filter_words(message):
+    local_message = message
+
+    for word in WORD_IGNORE_LIST:
+        ignore = ""
+        replace = ""
+
+        if ":" in word:
+            splitted = word.split(":")
+            ignore = splitted[0].lower()
+            replace = splitted[1]
+        else:
+            ignore = word.lower()
+
+        pattern = re.compile(re.escape(ignore), re.IGNORECASE)
+        local_message = pattern.sub(replace, local_message)
+
+    return local_message
 
 def ping_sender():
     while True:
@@ -82,6 +105,15 @@ def load_user_ignore_list():
     while "" in USER_IGNORE_LIST:
         USER_IGNORE_LIST.remove("")
 
+def load_word_ignore_list():
+    global WORD_IGNORE_LIST
+
+    file = open(WORD_IGNORE_PATH, "r")
+    file_content = file.read()
+    WORD_IGNORE_LIST = file_content.split("\n")
+    while "" in WORD_IGNORE_LIST:
+        WORD_IGNORE_LIST.remove("")
+
 def run_singlethread():
     while True:
         try:
@@ -89,6 +121,7 @@ def run_singlethread():
             line = resp.split('\r\n')[0]
             if is_valid_line(line):
                 message = line.split(':',2)[2]
+                message = filter_words(message)
                 say_single_message(message)
             
         except Exception:
@@ -101,6 +134,7 @@ def run_queue_single():
             for line in resp.split('\r\n'):
                 if is_valid_line(line):
                     message = line.split(':',2)[2]
+                    message = filter_words(message)
                     say_single_message(message)
             
         except Exception:
@@ -113,6 +147,7 @@ def run_multithread():
             for line in resp.split('\r\n'):
                 if is_valid_line(line):
                     message = line.split(':',2)[2]
+                    message = filter_words(message)
                     threading.Thread(target=say_single_message, args=(message,)).start()
 
         except Exception:

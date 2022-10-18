@@ -14,6 +14,7 @@ settings = dict(
     MODE = 'multi',
 
     USER_IGNORE_PATH = 'userignore.txt', # Path to file with usernames to ignore.
+    WORD_IGNORE_PATH = 'wordignore.txt', # Path to file with words to ignore.
 
     TMP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tmp')
 )
