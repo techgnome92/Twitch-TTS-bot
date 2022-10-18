@@ -4,6 +4,7 @@ import simpleaudio as sa
 import config
 import threading
 import traceback
+import time
 
 # Getting variables from config.py
 server = config.settings['server']
@@ -46,15 +47,20 @@ def say_single_message(message):
         traceback.print_exc()
 
 def is_valid_line(line):
-    if len(line) and not line.startswith("PING"):
+    if len(line) and not line.startswith("PING") and not line.startswith(":tmi.twitch.tv"):
         username = line.split(':',1)[1].split('!', 1)[0]
         if username not in IGNORE_LIST:
             return True
         else:
             return False
     elif line.startswith("PING"):
-        sock.send(bytes("PONG :tmi.twitch.tv", "UTF-8"))
+        sock.send("PONG :tmi.twitch.tv\r\n".encode())
         return False
+
+def ping_sender():
+    while True:
+        sock.send("PING :tmi.twitch.tv\r\n".encode())
+        time.sleep(300)
 
 def run_singlethread():
     while True:
@@ -91,8 +97,10 @@ def run_multithread():
 
         except Exception:
             traceback.print_exc()
+            time.sleep(1)
 
 if __name__ ==  '__main__':
+    threading.Thread(target=ping_sender, args=()).start()
     if MODE == 'keepup':
         run_singlethread()
     elif MODE == 'queue':
