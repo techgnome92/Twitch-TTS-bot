@@ -80,7 +80,7 @@ def filter_words(message):
         replace = ""
 
         if ":" in word:
-            splitted = word.split(":")
+            splitted = word.split(":", 1)
             ignore = splitted[0].lower()
             replace = splitted[1]
         else:
