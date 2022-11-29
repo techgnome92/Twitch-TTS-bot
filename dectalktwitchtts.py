@@ -1,4 +1,4 @@
-import os, sys, socket, uuid, time, re, traceback, threading
+import os, sys, socket, uuid, time, re, traceback, threading, keyboard
 from pydub import AudioSegment
 import simpleaudio as sa
 import config
@@ -13,6 +13,7 @@ MODE = config.settings['MODE']
 TMP_DIR = config.settings['TMP_DIR']
 USER_IGNORE_PATH = config.settings['USER_IGNORE_PATH']
 WORD_IGNORE_PATH = config.settings['WORD_IGNORE_PATH']
+SILENCE_HOTKEY = config.settings['SILENCE_HOTKEY']
 
 # Variables
 USER_IGNORE_LIST = []
@@ -152,7 +153,6 @@ def run_queue_single():
             break
 
 def run_multithread():
-
     while True:
         try:
             resp = sock.recv(2048).decode('utf-8')
@@ -169,6 +169,8 @@ def run_multithread():
         if exit_event.is_set():
             break
 
+def silence_please():
+    sa.stop_all()
 
 def await_command():
     while True:
@@ -189,8 +191,8 @@ Input: """)
 
 def exit_application():
     global thread_ping, thread_listen
-    sa.stop_all()
     sock.close()
+    silence_please()
     exit_event.set()
     thread_ping.join()
     thread_listen.join()
@@ -209,6 +211,10 @@ def start_listen():
 # Processes
 thread_ping = threading.Thread(target=ping_sender, args=())
 thread_listen = threading.Thread(target=start_listen, args=())
+
+# Hotkeys
+if SILENCE_HOTKEY:
+    keyboard.add_hotkey(SILENCE_HOTKEY, silence_please)
 
 if __name__ ==  '__main__':
     thread_ping.start()
