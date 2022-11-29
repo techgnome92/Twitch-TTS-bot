@@ -1,4 +1,4 @@
-import os, socket, uuid, time, re, traceback, threading
+import os, sys, socket, uuid, time, re, traceback, threading, keyboard
 from pydub import AudioSegment
 import simpleaudio as sa
 import config
@@ -13,6 +13,7 @@ MODE = config.settings['MODE']
 TMP_DIR = config.settings['TMP_DIR']
 USER_IGNORE_PATH = config.settings['USER_IGNORE_PATH']
 WORD_IGNORE_PATH = config.settings['WORD_IGNORE_PATH']
+SILENCE_HOTKEY = config.settings['SILENCE_HOTKEY']
 
 # Variables
 USER_IGNORE_LIST = []
@@ -20,6 +21,8 @@ WORD_IGNORE_LIST = []
 
 user_ignore_file_updated = 0
 word_ignore_file_updated = 0
+
+exit_event = threading.Event()
 
 # Makes temporary dirs if they dont exist
 if not os.path.exists(TMP_DIR):
@@ -94,7 +97,10 @@ def filter_words(message):
 def ping_sender():
     while True:
         sock.send("PING :tmi.twitch.tv\r\n".encode())
-        time.sleep(300)
+        exit_event.wait(300)
+
+        if exit_event.is_set():
+            break
 
 def load_user_ignore_list():
     global USER_IGNORE_LIST
@@ -127,6 +133,9 @@ def run_singlethread():
         except Exception:
             traceback.print_exc()
 
+        if exit_event.is_set():
+            break
+
 def run_queue_single():
     while True:
         try:
@@ -139,6 +148,9 @@ def run_queue_single():
             
         except Exception:
             traceback.print_exc()
+
+        if exit_event.is_set():
+            break
 
 def run_multithread():
     while True:
@@ -154,8 +166,39 @@ def run_multithread():
             traceback.print_exc()
             time.sleep(1)
 
-if __name__ ==  '__main__':
-    threading.Thread(target=ping_sender, args=()).start()
+        if exit_event.is_set():
+            break
+
+def silence_please():
+    sa.stop_all()
+
+def await_command():
+    while True:
+        try:
+            value = input("""
+The bot should be running now.
+    stop [s] \tStop all currently running audios.
+    quit [q] \tTurn off the bot.
+
+Input: """)
+            if value == "s" or value == "stop":
+                sa.stop_all()
+            elif value == "q" or value == "quit":
+                exit_application()
+
+        except Exception as e:
+            traceback.print_exc()
+
+def exit_application():
+    global thread_ping, thread_listen
+    sock.close()
+    silence_please()
+    exit_event.set()
+    thread_ping.join()
+    thread_listen.join()
+    sys.exit()
+
+def start_listen():
     if MODE == 'keepup':
         run_singlethread()
     elif MODE == 'queue':
@@ -164,3 +207,16 @@ if __name__ ==  '__main__':
         run_multithread()
     else:
         print('Please select a mode by editing the MODE variable ')
+
+# Processes
+thread_ping = threading.Thread(target=ping_sender, args=())
+thread_listen = threading.Thread(target=start_listen, args=())
+
+# Hotkeys
+if SILENCE_HOTKEY:
+    keyboard.add_hotkey(SILENCE_HOTKEY, silence_please)
+
+if __name__ ==  '__main__':
+    thread_ping.start()
+    thread_listen.start()
+    await_command()
