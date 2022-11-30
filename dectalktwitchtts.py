@@ -15,6 +15,13 @@ USER_IGNORE_PATH = config.settings['USER_IGNORE_PATH']
 WORD_IGNORE_PATH = config.settings['WORD_IGNORE_PATH']
 SILENCE_HOTKEY = config.settings['SILENCE_HOTKEY']
 
+VIP_ALLOWED = config.settings['VIP_ALLOWED']
+TURBO_ALLOWED = config.settings['TURBO_ALLOWED']
+MODERATOR_ALLOWED = config.settings['MODERATOR_ALLOWED']
+BIT_DONATION_ALLOWED = config.settings['BIT_DONATION_ALLOWED']
+CHANNEL_POINT_REDEMPTION_ALLOWED = config.settings['CHANNEL_POINT_REDEMPTION_ALLOWED']
+EVERYONE_ALLOWED = config.settings['EVERYONE_ALLOWED']
+
 # Variables
 USER_IGNORE_LIST = []
 WORD_IGNORE_LIST = []
@@ -33,6 +40,7 @@ sock.connect((server, port))
 sock.send(f"PASS {token}\n".encode('utf-8'))
 sock.send(f"NICK {nickname}\n".encode('utf-8'))
 sock.send(f"JOIN {channel}\n".encode('utf-8'))
+sock.send(f"CAP REQ :twitch.tv/tags\n".encode('utf-8'))
 resp = sock.recv(2048).decode('utf-8')
 resp = sock.recv(2048).decode('utf-8')
 
@@ -58,7 +66,6 @@ def is_valid_line(line):
     global user_ignore_file_updated, word_ignore_file_updated
 
     if len(line) and not line.startswith("PING") and not line.startswith(":tmi.twitch.tv"):
-        username = line.split(':',1)[1].split('!', 1)[0]
         if user_ignore_file_updated < os.stat(USER_IGNORE_PATH).st_mtime:
             user_ignore_file_updated = os.stat(USER_IGNORE_PATH).st_mtime
             load_user_ignore_list()
@@ -67,7 +74,34 @@ def is_valid_line(line):
             word_ignore_file_updated = os.stat(WORD_IGNORE_PATH).st_mtime
             load_word_ignore_list()
 
-        if username not in USER_IGNORE_LIST:
+
+        lineSplit = line.split(" ", 1)
+        lineTags = lineSplit[0].split(";")
+        lineMessage = lineSplit[1]
+        username, channel, message = re.search(':(.*)\!.*@.*\.tmi\.twitch\.tv PRIVMSG #(.*) :(.*)', lineMessage).groups()
+
+        if not message:
+            return False
+
+        if username in USER_IGNORE_LIST:
+            return False
+        elif EVERYONE_ALLOWED:
+            return True
+        elif "badges=broadcaster/1" in lineTags:
+            return True
+        elif VIP_ALLOWED and "vip=1" in lineTags:
+            return True
+        elif TURBO_ALLOWED and "turbo=1" in lineTags:
+            return True
+        elif MODERATOR_ALLOWED and "mod=1" in lineTags:
+            return True
+        elif BIT_DONATION_ALLOWED and "bits=" in lineSplit[0]:
+            if isinstance(BIT_DONATION_ALLOWED, int):
+                bitAmount = lineSplit.split("bits=", 1)[1].split(";", 1)[0]
+                return BIT_DONATION_ALLOWED <= bitAmount
+            else:
+                return True
+        elif CHANNEL_POINT_REDEMPTION_ALLOWED and "custom-reward-id=" in lineSplit[0]:
             return True
         else:
             return False
@@ -126,7 +160,9 @@ def run_singlethread():
             resp = sock.recv(2048).decode('utf-8')
             line = resp.split('\r\n')[0]
             if is_valid_line(line):
-                message = line.split(':',2)[2]
+                lineSplit = line.split(" ", 1)
+                lineMessage = lineSplit[1]
+                username, channel, message = re.search(':(.*)\!.*@.*\.tmi\.twitch\.tv PRIVMSG #(.*) :(.*)', lineMessage).groups()
                 message = filter_words(message)
                 say_single_message(message)
             
