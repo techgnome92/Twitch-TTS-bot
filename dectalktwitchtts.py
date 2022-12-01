@@ -210,7 +210,9 @@ def run_queue_single():
             refresh_lists()
             for line in resp.split('\r\n'):
                 if is_valid_line(line):
-                    message = line.split(':',2)[2]
+                    lineSplit = line.split(" ", 1)
+                    lineMessage = lineSplit[1]
+                    username, channel, message = re.search(':(.*)\!.*@.*\.tmi\.twitch\.tv PRIVMSG #(.*) :(.*)', lineMessage).groups()
                     message = filter_words(message)
                     say_single_message(message)
             
@@ -227,7 +229,9 @@ def run_multithread():
             refresh_lists()
             for line in resp.split('\r\n'):
                 if is_valid_line(line):
-                    message = line.split(':',2)[2]
+                    lineSplit = line.split(" ", 1)
+                    lineMessage = lineSplit[1]
+                    username, channel, message = re.search(':(.*)\!.*@.*\.tmi\.twitch\.tv PRIVMSG #(.*) :(.*)', lineMessage).groups()
                     message = filter_words(message)
                     threading.Thread(target=say_single_message, args=(message,)).start()
 
