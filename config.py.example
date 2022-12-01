@@ -14,10 +14,19 @@ settings = dict(
     MODE = 'multi',
 
     USER_IGNORE_PATH = 'userignore.txt', # Path to file with usernames to ignore.
+    USER_ALLOW_PATH = 'userallow.txt', # Path to file with usernames to allow.
     WORD_IGNORE_PATH = 'wordignore.txt', # Path to file with words to ignore.
 
     SILENCE_HOTKEY = 'ctrl+shift+a', # Hotkey for silence. More examples here: https://github.com/boppreh/keyboard
 
+    # Groups that are enabled for TTS
+    SUBSCRIBERS_ALLOWED = True,
+    VIP_ALLOWED = True,
+    TURBO_ALLOWED = False,
+    MODERATOR_ALLOWED = True,
+    BIT_DONATION_ALLOWED = 10,
+    CHANNEL_POINT_REDEMPTION_ALLOWED = False,
+    EVERYONE_ALLOWED = False,
 
     TMP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tmp')
 )
