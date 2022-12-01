@@ -15,6 +15,7 @@ USER_IGNORE_PATH = config.settings['USER_IGNORE_PATH']
 WORD_IGNORE_PATH = config.settings['WORD_IGNORE_PATH']
 SILENCE_HOTKEY = config.settings['SILENCE_HOTKEY']
 
+SUBSCRIBERS_ALLOWED = config.settings['SUBSCRIBERS_ALLOWED']
 VIP_ALLOWED = config.settings['VIP_ALLOWED']
 TURBO_ALLOWED = config.settings['TURBO_ALLOWED']
 MODERATOR_ALLOWED = config.settings['MODERATOR_ALLOWED']
@@ -89,6 +90,8 @@ def is_valid_line(line):
             return True
         elif "badges=broadcaster/1" in lineTags:
             return True
+        elif SUBSCRIBERS_ALLOWED and "subscriber=1" in lineTags:
+            return True
         elif VIP_ALLOWED and "vip=1" in lineTags:
             return True
         elif TURBO_ALLOWED and "turbo=1" in lineTags:
@@ -97,8 +100,8 @@ def is_valid_line(line):
             return True
         elif BIT_DONATION_ALLOWED and "bits=" in lineSplit[0]:
             if isinstance(BIT_DONATION_ALLOWED, int):
-                bitAmount = lineSplit.split("bits=", 1)[1].split(";", 1)[0]
-                return BIT_DONATION_ALLOWED <= bitAmount
+                bitAmount = lineSplit[0].split("bits=", 1)[1].split(";", 1)[0]
+                return BIT_DONATION_ALLOWED <= int(bitAmount)
             else:
                 return True
         elif CHANNEL_POINT_REDEMPTION_ALLOWED and "custom-reward-id=" in lineSplit[0]:
@@ -211,16 +214,46 @@ def silence_please():
 def await_command():
     while True:
         try:
-            value = input("""
-The bot should be running now.
-    stop [s] \tStop all currently running audios.
-    quit [q] \tTurn off the bot.
-
-Input: """)
+            global SUBSCRIBERS_ALLOWED, VIP_ALLOWED, TURBO_ALLOWED, MODERATOR_ALLOWED, BIT_DONATION_ALLOWED, CHANNEL_POINT_REDEMPTION_ALLOWED, EVERYONE_ALLOWED
+            print("The bot should be running now.")
+            print("")
+            print("\tstop [s] \t\tStop all currently running audios.")
+            print("\tquit [q] \t\tTurn off the bot.")
+            print("")
+            print("\ttoggle subscribers [ts] \t\tSubscribed users allowed: \t" + str(SUBSCRIBERS_ALLOWED))
+            print("\ttoggle vip [tv] \t\t\tVIP users allowed: \t\t" + str(VIP_ALLOWED))
+            print("\ttoggle turbo [tt] \t\t\tTurbo users allowed: \t\t" + str(TURBO_ALLOWED))
+            print("\ttoggle mods [tm] \t\t\tModerator users allowed: \t" + str(MODERATOR_ALLOWED))
+            print("\ttoggle bits (amount) [tb(amount)] \tBit donations allowed: \t\t" + str(BIT_DONATION_ALLOWED))
+            print("\ttoggle points [tp] \t\t\tChannel point reward allowed: \t" + str(CHANNEL_POINT_REDEMPTION_ALLOWED))
+            print("\ttoggle everyone [te] \t\t\tEveryone allowed: \t\t" + str(EVERYONE_ALLOWED))
+            print("")
+            value = input("Input: ")
             if value == "s" or value == "stop":
                 sa.stop_all()
             elif value == "q" or value == "quit":
                 exit_application()
+            elif value == "ts" or value == "toggle subscribers":
+                SUBSCRIBERS_ALLOWED = not SUBSCRIBERS_ALLOWED
+            elif value == "tv" or value == "toggle vip":
+                VIP_ALLOWED = not VIP_ALLOWED
+            elif value == "tt" or value == "toggle turbo":
+                TURBO_ALLOWED = not TURBO_ALLOWED
+            elif value == "tm" or value == "toggle mods":
+                MODERATOR_ALLOWED = not MODERATOR_ALLOWED
+            elif value == "tp" or value == "toggle points":
+                CHANNEL_POINT_REDEMPTION_ALLOWED = not CHANNEL_POINT_REDEMPTION_ALLOWED
+            elif value == "te" or value == "toggle everyone":
+                EVERYONE_ALLOWED = not EVERYONE_ALLOWED
+            elif value == "tb" or value == "toggle bits":
+                BIT_DONATION_ALLOWED = not BIT_DONATION_ALLOWED
+            elif "tb" in value:
+                amount, = re.search('tb(.*)', value).groups()
+                BIT_DONATION_ALLOWED = int(amount)
+            elif "toggle bits " in value:
+                amount, = re.search('toggle bits (.*)', value).groups()
+                BIT_DONATION_ALLOWED = int(amount)
+
 
         except Exception as e:
             traceback.print_exc()
