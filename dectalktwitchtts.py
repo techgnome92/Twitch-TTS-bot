@@ -12,6 +12,7 @@ channel = config.settings['channel']
 MODE = config.settings['MODE']
 TMP_DIR = config.settings['TMP_DIR']
 USER_IGNORE_PATH = config.settings['USER_IGNORE_PATH']
+USER_ALLOW_PATH = config.settings['USER_ALLOW_PATH']
 WORD_IGNORE_PATH = config.settings['WORD_IGNORE_PATH']
 SILENCE_HOTKEY = config.settings['SILENCE_HOTKEY']
 
@@ -25,9 +26,11 @@ EVERYONE_ALLOWED = config.settings['EVERYONE_ALLOWED']
 
 # Variables
 USER_IGNORE_LIST = []
+USER_ALLOW_LIST = []
 WORD_IGNORE_LIST = []
 
 user_ignore_file_updated = 0
+user_allow_file_updated = 0
 word_ignore_file_updated = 0
 
 exit_event = threading.Event()
@@ -64,17 +67,7 @@ def say_single_message(message):
         traceback.print_exc()
 
 def is_valid_line(line):
-    global user_ignore_file_updated, word_ignore_file_updated
-
     if len(line) and not line.startswith("PING") and not line.startswith(":tmi.twitch.tv"):
-        if user_ignore_file_updated < os.stat(USER_IGNORE_PATH).st_mtime:
-            user_ignore_file_updated = os.stat(USER_IGNORE_PATH).st_mtime
-            load_user_ignore_list()
-
-        if word_ignore_file_updated < os.stat(WORD_IGNORE_PATH).st_mtime:
-            word_ignore_file_updated = os.stat(WORD_IGNORE_PATH).st_mtime
-            load_word_ignore_list()
-
 
         lineSplit = line.split(" ", 1)
         lineTags = lineSplit[0].split(";")
@@ -106,11 +99,28 @@ def is_valid_line(line):
                 return True
         elif CHANNEL_POINT_REDEMPTION_ALLOWED and "custom-reward-id=" in lineSplit[0]:
             return True
+        elif username in USER_ALLOW_LIST:
+            return True
         else:
             return False
     elif line.startswith("PING"):
         sock.send("PONG :tmi.twitch.tv\r\n".encode())
         return False
+
+def refresh_lists():
+    global user_ignore_file_updated, user_allow_file_updated, word_ignore_file_updated
+
+    if user_ignore_file_updated < os.stat(USER_IGNORE_PATH).st_mtime:
+        user_ignore_file_updated = os.stat(USER_IGNORE_PATH).st_mtime
+        load_user_ignore_list()
+
+    if user_allow_file_updated < os.stat(USER_ALLOW_PATH).st_mtime:
+        user_allow_file_updated = os.stat(USER_ALLOW_PATH).st_mtime
+        load_user_allow_list()
+
+    if word_ignore_file_updated < os.stat(WORD_IGNORE_PATH).st_mtime:
+        word_ignore_file_updated = os.stat(WORD_IGNORE_PATH).st_mtime
+        load_word_ignore_list()
 
 def filter_words(message):
     local_message = message
@@ -144,9 +154,26 @@ def load_user_ignore_list():
 
     file = open(USER_IGNORE_PATH, "r")
     file_content = file.read()
-    USER_IGNORE_LIST = file_content.split("\n")
+    USER_IGNORE_LIST = []
+
+    for line in file_content.split("\n"):
+        USER_IGNORE_LIST.append(line.lower())
+
     while "" in USER_IGNORE_LIST:
         USER_IGNORE_LIST.remove("")
+
+def load_user_allow_list():
+    global USER_ALLOW_LIST
+
+    file = open(USER_ALLOW_PATH, "r")
+    file_content = file.read()
+    USER_ALLOW_LIST = []
+
+    for line in file_content.split("\n"):
+        USER_ALLOW_LIST.append(line.lower())
+
+    while "" in USER_ALLOW_LIST:
+        USER_ALLOW_LIST.remove("")
 
 def load_word_ignore_list():
     global WORD_IGNORE_LIST
@@ -161,6 +188,7 @@ def run_singlethread():
     while True:
         try:
             resp = sock.recv(2048).decode('utf-8')
+            refresh_lists()
             line = resp.split('\r\n')[0]
             if is_valid_line(line):
                 lineSplit = line.split(" ", 1)
@@ -179,6 +207,7 @@ def run_queue_single():
     while True:
         try:
             resp = sock.recv(2048).decode('utf-8')
+            refresh_lists()
             for line in resp.split('\r\n'):
                 if is_valid_line(line):
                     message = line.split(':',2)[2]
@@ -195,6 +224,7 @@ def run_multithread():
     while True:
         try:
             resp = sock.recv(2048).decode('utf-8')
+            refresh_lists()
             for line in resp.split('\r\n'):
                 if is_valid_line(line):
                     message = line.split(':',2)[2]
@@ -254,7 +284,8 @@ def await_command():
                 amount, = re.search('toggle bits (.*)', value).groups()
                 BIT_DONATION_ALLOWED = int(amount)
 
-
+        except KeyboardInterrupt:
+            exit_application()
         except Exception as e:
             traceback.print_exc()
 
