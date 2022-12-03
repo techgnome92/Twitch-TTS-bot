@@ -35,6 +35,8 @@ word_ignore_file_updated = 0
 
 exit_event = threading.Event()
 
+USERNAME_CHANNEL_MESSAGE_REGEX = ':(.*)\!.*@.*\.tmi\.twitch\.tv PRIVMSG #(\w+) :(.*)'
+
 # Makes temporary dirs if they dont exist
 if not os.path.exists(TMP_DIR):
     os.makedirs(TMP_DIR)
@@ -72,7 +74,7 @@ def is_valid_line(line):
         lineSplit = line.split(" ", 1)
         lineTags = lineSplit[0].split(";")
         lineMessage = lineSplit[1]
-        username, channel, message = re.search(':(.*)\!.*@.*\.tmi\.twitch\.tv PRIVMSG #(.*) :(.*)', lineMessage).groups()
+        username, channel, message = re.search(USERNAME_CHANNEL_MESSAGE_REGEX, lineMessage).groups()
 
         if not message:
             return False
@@ -193,7 +195,7 @@ def run_singlethread():
             if is_valid_line(line):
                 lineSplit = line.split(" ", 1)
                 lineMessage = lineSplit[1]
-                username, channel, message = re.search(':(.*)\!.*@.*\.tmi\.twitch\.tv PRIVMSG #(.*) :(.*)', lineMessage).groups()
+                username, channel, message = re.search(USERNAME_CHANNEL_MESSAGE_REGEX, lineMessage).groups()
                 message = filter_words(message)
                 say_single_message(message)
             
@@ -212,7 +214,7 @@ def run_queue_single():
                 if is_valid_line(line):
                     lineSplit = line.split(" ", 1)
                     lineMessage = lineSplit[1]
-                    username, channel, message = re.search(':(.*)\!.*@.*\.tmi\.twitch\.tv PRIVMSG #(.*) :(.*)', lineMessage).groups()
+                    username, channel, message = re.search(USERNAME_CHANNEL_MESSAGE_REGEX, lineMessage).groups()
                     message = filter_words(message)
                     say_single_message(message)
             
@@ -231,7 +233,7 @@ def run_multithread():
                 if is_valid_line(line):
                     lineSplit = line.split(" ", 1)
                     lineMessage = lineSplit[1]
-                    username, channel, message = re.search(':(.*)\!.*@.*\.tmi\.twitch\.tv PRIVMSG #(.*) :(.*)', lineMessage).groups()
+                    username, channel, message = re.search(USERNAME_CHANNEL_MESSAGE_REGEX, lineMessage).groups()
                     message = filter_words(message)
                     threading.Thread(target=say_single_message, args=(message,)).start()
 
