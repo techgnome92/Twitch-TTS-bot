@@ -15,6 +15,7 @@ USER_IGNORE_PATH = config.settings['USER_IGNORE_PATH']
 USER_ALLOW_PATH = config.settings['USER_ALLOW_PATH']
 WORD_IGNORE_PATH = config.settings['WORD_IGNORE_PATH']
 SILENCE_HOTKEY = config.settings['SILENCE_HOTKEY']
+SAY_USERNAME = config.settings['SAY_USERNAME']
 
 SUBSCRIBERS_ALLOWED = config.settings['SUBSCRIBERS_ALLOWED']
 VIP_ALLOWED = config.settings['VIP_ALLOWED']
@@ -143,6 +144,13 @@ def filter_words(message):
 
     return local_message
 
+def add_username_says(message, username):
+    if SAY_USERNAME:
+        return username + " says " + message
+    else:
+        return message
+
+
 def ping_sender():
     while True:
         sock.send("PING :tmi.twitch.tv\r\n".encode())
@@ -197,6 +205,8 @@ def run_singlethread():
                 lineMessage = lineSplit[1]
                 username, channel, message = re.search(USERNAME_CHANNEL_MESSAGE_REGEX, lineMessage).groups()
                 message = filter_words(message)
+                message = add_username_says(message, username)
+
                 say_single_message(message)
             
         except Exception:
@@ -216,6 +226,8 @@ def run_queue_single():
                     lineMessage = lineSplit[1]
                     username, channel, message = re.search(USERNAME_CHANNEL_MESSAGE_REGEX, lineMessage).groups()
                     message = filter_words(message)
+                    message = add_username_says(message, username)
+
                     say_single_message(message)
             
         except Exception:
@@ -235,6 +247,8 @@ def run_multithread():
                     lineMessage = lineSplit[1]
                     username, channel, message = re.search(USERNAME_CHANNEL_MESSAGE_REGEX, lineMessage).groups()
                     message = filter_words(message)
+                    message = add_username_says(message, username)
+
                     threading.Thread(target=say_single_message, args=(message,)).start()
 
         except Exception:

@@ -13,6 +13,8 @@ settings = dict(
     # 'multi'   Say multiple messages simultaneously.
     MODE = 'multi',
 
+    SAY_USERNAME = False, # Starts with "USERNAME says".
+
     USER_IGNORE_PATH = 'userignore.txt', # Path to file with usernames to ignore.
     USER_ALLOW_PATH = 'userallow.txt', # Path to file with usernames to allow.
     WORD_IGNORE_PATH = 'wordignore.txt', # Path to file with words to ignore.
