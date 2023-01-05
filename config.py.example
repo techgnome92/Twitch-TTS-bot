@@ -15,11 +15,24 @@ settings = dict(
 
     SAY_USERNAME = False, # Starts with "USERNAME says".
 
-    USER_IGNORE_PATH = 'userignore.txt', # Path to file with usernames to ignore.
-    USER_ALLOW_PATH = 'userallow.txt', # Path to file with usernames to allow.
-    WORD_IGNORE_PATH = 'wordignore.txt', # Path to file with words to ignore.
+    # Path to file with usernames to ignore.
+    USER_IGNORE_PATH = 'userignore.txt',
 
-    SILENCE_HOTKEY = 'ctrl+shift+a', # Hotkey for silence. More examples here: https://github.com/boppreh/keyboard
+    # Path to file with usernames to allow.
+    USER_ALLOW_PATH = 'userallow.txt',
+
+    # Path to file with regex filter. This can be used to filter whole messages.
+    # Examples:
+    #     ^!(.*) - Filters all messages starting with "!".
+    #     (.*)test(.*) - Filters the whole message if it contains "test".
+    #     (?i)\b(https|http|ftp)://([-A-Z0-9.]+)(/[-A-Z0-9+&@#/%=~_|!:,.;]*)?(\?[A-Z0-9+&@#/%=~_|!:,.;]*)? - Filters links.
+    REGEX_FILTER_PATH = 'regexfilter.txt',
+
+    # Path to file with words to ignore.
+    WORD_IGNORE_PATH = 'wordignore.txt',
+
+    # Hotkey for silence. More examples here: https://github.com/boppreh/keyboard
+    SILENCE_HOTKEY = 'ctrl+shift+a',
 
     # Groups that are enabled for TTS
     SUBSCRIBERS_ALLOWED = True,

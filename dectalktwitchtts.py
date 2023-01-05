@@ -13,6 +13,7 @@ MODE = config.settings['MODE']
 TMP_DIR = config.settings['TMP_DIR']
 USER_IGNORE_PATH = config.settings['USER_IGNORE_PATH']
 USER_ALLOW_PATH = config.settings['USER_ALLOW_PATH']
+REGEX_FILTER_PATH = config.settings['REGEX_FILTER_PATH']
 WORD_IGNORE_PATH = config.settings['WORD_IGNORE_PATH']
 SILENCE_HOTKEY = config.settings['SILENCE_HOTKEY']
 SAY_USERNAME = config.settings['SAY_USERNAME']
@@ -28,10 +29,12 @@ EVERYONE_ALLOWED = config.settings['EVERYONE_ALLOWED']
 # Variables
 USER_IGNORE_LIST = []
 USER_ALLOW_LIST = []
+REGEX_FILTER = []
 WORD_IGNORE_LIST = []
 
 user_ignore_file_updated = 0
 user_allow_file_updated = 0
+regex_filter_file_updated = 0
 word_ignore_file_updated = 0
 
 exit_event = threading.Event()
@@ -111,7 +114,7 @@ def is_valid_line(line):
         return False
 
 def refresh_lists():
-    global user_ignore_file_updated, user_allow_file_updated, word_ignore_file_updated
+    global user_ignore_file_updated, user_allow_file_updated, regex_filter_file_updated, word_ignore_file_updated
 
     if user_ignore_file_updated < os.stat(USER_IGNORE_PATH).st_mtime:
         user_ignore_file_updated = os.stat(USER_IGNORE_PATH).st_mtime
@@ -121,9 +124,21 @@ def refresh_lists():
         user_allow_file_updated = os.stat(USER_ALLOW_PATH).st_mtime
         load_user_allow_list()
 
+    if regex_filter_file_updated < os.stat(REGEX_FILTER_PATH).st_mtime:
+        regex_filter_file_updated = os.stat(REGEX_FILTER_PATH).st_mtime
+        load_regex_filter()
+
     if word_ignore_file_updated < os.stat(WORD_IGNORE_PATH).st_mtime:
         word_ignore_file_updated = os.stat(WORD_IGNORE_PATH).st_mtime
         load_word_ignore_list()
+
+def filter_regex(message):
+    local_message = message
+
+    for pattern in REGEX_FILTER:
+        local_message = re.sub(pattern, "", local_message)
+
+    return local_message
 
 def filter_words(message):
     local_message = message
@@ -185,6 +200,15 @@ def load_user_allow_list():
     while "" in USER_ALLOW_LIST:
         USER_ALLOW_LIST.remove("")
 
+def load_regex_filter():
+    global REGEX_FILTER
+
+    file = open(REGEX_FILTER_PATH, "r")
+    file_content = file.read()
+    REGEX_FILTER = file_content.split("\n")
+    while "" in REGEX_FILTER:
+        REGEX_FILTER.remove("")
+
 def load_word_ignore_list():
     global WORD_IGNORE_LIST
 
@@ -204,6 +228,7 @@ def run_singlethread():
                 lineSplit = line.split(" ", 1)
                 lineMessage = lineSplit[1]
                 username, channel, message = re.search(USERNAME_CHANNEL_MESSAGE_REGEX, lineMessage).groups()
+                message = filter_regex(message)
                 message = filter_words(message)
                 message = add_username_says(message, username)
 
@@ -225,6 +250,7 @@ def run_queue_single():
                     lineSplit = line.split(" ", 1)
                     lineMessage = lineSplit[1]
                     username, channel, message = re.search(USERNAME_CHANNEL_MESSAGE_REGEX, lineMessage).groups()
+                    message = filter_regex(message)
                     message = filter_words(message)
                     message = add_username_says(message, username)
 
@@ -246,6 +272,7 @@ def run_multithread():
                     lineSplit = line.split(" ", 1)
                     lineMessage = lineSplit[1]
                     username, channel, message = re.search(USERNAME_CHANNEL_MESSAGE_REGEX, lineMessage).groups()
+                    message = filter_regex(message)
                     message = filter_words(message)
                     message = add_username_says(message, username)
 
