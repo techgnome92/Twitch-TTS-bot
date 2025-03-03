@@ -26,5 +26,3 @@ def create_wave(tmp_dir: str, message: str, tts: str = "ms_sam"):
         cmd_line = f"wine {cmd_line}"
 
     os.system(cmd_line)
-
-create_wave("tmp.wav", "THIS IS A TEST", "dektalk")
