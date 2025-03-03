@@ -6,6 +6,7 @@ voices = {
     "ms_mary": "MSMary",
     "ms_david": "TTS_MS_EN-US_DAVID_11.0",
     "ms_zira": "TTS_MS_EN-US_ZIRA_11.0",
+    "dektalk": "dektalk"
 }
 
 
