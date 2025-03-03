@@ -44,5 +44,5 @@ settings = dict(
     EVERYONE_ALLOWED = False,
 
     TMP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tmp')
-    TTS_VOICE = ms_sam
+    TTS_VOICE = "ms_sam"
 )
