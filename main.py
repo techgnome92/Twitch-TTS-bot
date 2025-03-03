@@ -27,6 +27,7 @@ MODERATOR_ALLOWED = config.settings['MODERATOR_ALLOWED']
 BIT_DONATION_ALLOWED = config.settings['BIT_DONATION_ALLOWED']
 CHANNEL_POINT_REDEMPTION_ALLOWED = config.settings['CHANNEL_POINT_REDEMPTION_ALLOWED']
 EVERYONE_ALLOWED = config.settings['EVERYONE_ALLOWED']
+TTS_VOICE = config.settings["TTS_VOICE"]
 
 # Variables
 USER_IGNORE_LIST = []
@@ -57,13 +58,13 @@ resp = sock.recv(2048).decode('utf-8')
 resp = sock.recv(2048).decode('utf-8')
 
 
-def say_single_message(message, tts: str = "ms_sam"):
+def say_single_message(message):
     try:
         session = str(uuid.uuid1())
         temp_wav = os.path.join(TMP_DIR, session+'.wav')
         message = message.replace('"', '').replace('&', '').replace('|', '').replace(';', '')
         
-        call_tts.create_wave(tts=tts, tmp_dir=temp_wav, message=message)
+        call_tts.create_wave(tts=TTS_VOICE, tmp_dir=temp_wav, message=message)
         
         wave_obj = sa.WaveObject.from_wave_file(temp_wav)
         play_obj = wave_obj.play()
