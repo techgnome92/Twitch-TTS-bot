@@ -10,6 +10,11 @@ voices = {
 
 
 def create_wave(tmp_dir: str, message: str, tts: str = "ms_sam"):
+
+    if tts == "dektalk":
+        os.system(f"say.exe -d dtalk_us.dic -w {tmp_dir} [:phoneme on] '{message}'")
+        return
+
     # if tts is not valid voice is empty
     voice = ""
     if tts in voices.keys():
