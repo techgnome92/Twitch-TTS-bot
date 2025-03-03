@@ -10,7 +10,7 @@ voices = {
 
 
 def create_wave(tmp_dir: str, message: str, tts: str = "ms_sam"):
-    # if tts is not valid default to config tts
+    # if tts is not valid voice is empty
     voice = ""
     if tts in voices.keys():
         voice = f"--voice {voices[tts]}"
