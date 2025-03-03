@@ -306,7 +306,7 @@ def silence_please():
 def await_command():
     while True:
         try:
-            global SUBSCRIBERS_ALLOWED, VIP_ALLOWED, TURBO_ALLOWED, MODERATOR_ALLOWED, BIT_DONATION_ALLOWED, CHANNEL_POINT_REDEMPTION_ALLOWED, EVERYONE_ALLOWED
+            global SUBSCRIBERS_ALLOWED, VIP_ALLOWED, TURBO_ALLOWED, MODERATOR_ALLOWED, BIT_DONATION_ALLOWED, CHANNEL_POINT_REDEMPTION_ALLOWED, EVERYONE_ALLOWED, TTS_VOICE
             print("The bot should be running now.")
             print("")
             print("\tstop [s] \t\tStop all currently running audios.")
@@ -319,6 +319,7 @@ def await_command():
             print("\ttoggle bits (amount) [tb(amount)] \tBit donations allowed: \t\t" + str(BIT_DONATION_ALLOWED))
             print("\ttoggle points [tp] \t\t\tChannel point reward allowed: \t" + str(CHANNEL_POINT_REDEMPTION_ALLOWED))
             print("\ttoggle everyone [te] \t\t\tEveryone allowed: \t\t" + str(EVERYONE_ALLOWED))
+            print("\tchange voice [cv] \t\t\tCurrent Voice: \t\t" + str(TTS_VOICE))
             print("")
             value = input("Input: ")
             if value == "s" or value == "stop":
@@ -345,12 +346,23 @@ def await_command():
             elif "toggle bits " in value:
                 amount, = re.search('toggle bits (.*)', value).groups()
                 BIT_DONATION_ALLOWED = int(amount)
+            elif "change_voice " in value:
+                voice, = re.search('change voice (.*)', value).groups()
+                if voice not in call_tts.voices.keys():
+                    raise ValueError(f"{voice} is not a valid voice")
+                TTS_VOICE = str(voice)
+            elif "cv " in value:
+                voice, = re.search('cv (.*)', value).groups()
+                if voice not in call_tts.voices.keys():
+                    raise ValueError(f"{voice} is not a valid voice")
+                TTS_VOICE = str(voice)
 
         except KeyboardInterrupt:
             exit_application()
         except Exception as e:
             traceback.print_exc()
-
+        except ValueError as e:
+            print(e)
 
 def exit_application():
     global thread_ping, thread_listen

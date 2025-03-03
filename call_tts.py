@@ -1,5 +1,7 @@
 import os
 
+import config
+
 voices = {
     "ms_sam": "MSSam",
     "ms_mike": "MSMike",
@@ -10,6 +12,8 @@ voices = {
 
 
 def create_wave(tmp_dir: str, message: str, tts: str = "ms_sam"):
+    if tts not in voices:
+        tts = config.settings["TTS_VOICE"]
 
     voice = voices[tts]
 
