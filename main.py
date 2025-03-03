@@ -63,9 +63,9 @@ def say_single_message(message):
         session = str(uuid.uuid1())
         temp_wav = os.path.join(TMP_DIR, session+'.wav')
         message = message.replace('"', '').replace('&', '').replace('|', '').replace(';', '')
-        
+
         call_tts.create_wave(tts=TTS_VOICE, tmp_dir=temp_wav, message=message)
-        
+
         wave_obj = sa.WaveObject.from_wave_file(temp_wav)
         play_obj = wave_obj.play()
         play_obj.wait_done()

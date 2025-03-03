@@ -27,3 +27,8 @@ def create_wave(tmp_dir: str, message: str, tts: str = "ms_sam"):
         cmd_line = f"wine {cmd_line}"
 
     os.system(cmd_line)
+
+
+if __name__ == "__main__":
+    for voice in voices:
+        create_wave(f"{voice}.wav", "This is a test", voice)
