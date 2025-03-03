@@ -1,7 +1,5 @@
 import os
 
-import config
-
 voices = {
     "ms_sam": "MSSam",
     "ms_mike": "MSMike",
@@ -13,15 +11,11 @@ voices = {
 
 def create_wave(tmp_dir: str, message: str, tts: str = "ms_sam"):
     # if tts is not valid default to config tts
-    if tts not in voices:
-        tts = config.settings["TTS_VOICE"]
-    # if config is also not allow default to ms_sam
-    if tts not in voices:
-        tts = "ms_sam"
+    voice = ""
+    if tts in voices.keys():
+        voice = f"--voice {voices[tts]}"
 
-    voice = voices[tts]
-
-    cmd_line = f'python ms_sam/ms_sam.py --voice {voice} {tmp_dir} "{message}"'
+    cmd_line = f'python ms_sam/ms_sam.py {voice} {tmp_dir} "{message}"'
 
     if os.name != "nt":
         cmd_line = f"wine {cmd_line}"
