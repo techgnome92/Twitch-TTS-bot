@@ -1,3 +1,16 @@
 pydub==0.24.1
 simpleaudio==1.0.4
 keyboard==0.13.5
+click==8.1.8
+colorama==0.4.6
+comtypes==1.4.10
+markdown-it-py==3.0.0
+mdurl==0.1.2
+Pygments==2.19.1
+pypiwin32==223
+pyttsx3==2.98
+pywin32==308
+rich==13.9.4
+shellingham==1.5.4
+typer==0.15.2
+typing_extensions==4.12.2

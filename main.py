@@ -3,6 +3,8 @@ from pydub import AudioSegment
 import simpleaudio as sa
 import config
 
+import call_tts
+
 # Getting variables from config.py
 server = config.settings['server']
 port = config.settings['port']
@@ -54,23 +56,22 @@ sock.send(f"CAP REQ :twitch.tv/tags\n".encode('utf-8'))
 resp = sock.recv(2048).decode('utf-8')
 resp = sock.recv(2048).decode('utf-8')
 
-def say_single_message(message):
+
+def say_single_message(message, tts: str = "ms_sam"):
     try:
         session = str(uuid.uuid1())
         temp_wav = os.path.join(TMP_DIR, session+'.wav')
         message = message.replace('"', '').replace('&', '').replace('|', '').replace(';', '')
-        if os.name == 'nt':
-            #print("say.exe -d dtalk_us.dic -w "+temp_wav+" \"[:phoneme on]"+message+"\"")
-            os.system("say.exe -d dtalk_us.dic -w "+temp_wav+" \"[:phoneme on]"+message+"\"")
-        else:
-            #print("wine say.exe -d dtalk_us.dic -w "+temp_wav+" \"[:phoneme on]"+message+"\"")
-            os.system("wine say.exe -d dtalk_us.dic -w "+temp_wav+" \"[:phoneme on]"+message+"\"")
+        
+        call_tts.create_wave(tts=tts, tmp_dir=temp_wav, message=message)
+        
         wave_obj = sa.WaveObject.from_wave_file(temp_wav)
         play_obj = wave_obj.play()
         play_obj.wait_done()
         os.remove(temp_wav)
     except Exception:
         traceback.print_exc()
+
 
 def is_valid_line(line):
     if len(line) and not line.startswith("PING") and not line.startswith(":tmi.twitch.tv"):
@@ -113,6 +114,7 @@ def is_valid_line(line):
         sock.send("PONG :tmi.twitch.tv\r\n".encode())
         return False
 
+
 def refresh_lists():
     global user_ignore_file_updated, user_allow_file_updated, regex_filter_file_updated, word_ignore_file_updated
 
@@ -132,6 +134,7 @@ def refresh_lists():
         word_ignore_file_updated = os.stat(WORD_IGNORE_PATH).st_mtime
         load_word_ignore_list()
 
+
 def filter_regex(message):
     local_message = message
 
@@ -139,6 +142,7 @@ def filter_regex(message):
         local_message = re.sub(pattern, "", local_message)
 
     return local_message
+
 
 def filter_words(message):
     local_message = message
@@ -159,6 +163,7 @@ def filter_words(message):
 
     return local_message
 
+
 def add_username_says(message, username):
     if SAY_USERNAME:
         return username + " says " + message
@@ -174,6 +179,7 @@ def ping_sender():
         if exit_event.is_set():
             break
 
+
 def load_user_ignore_list():
     global USER_IGNORE_LIST
 
@@ -186,6 +192,7 @@ def load_user_ignore_list():
 
     while "" in USER_IGNORE_LIST:
         USER_IGNORE_LIST.remove("")
+
 
 def load_user_allow_list():
     global USER_ALLOW_LIST
@@ -200,6 +207,7 @@ def load_user_allow_list():
     while "" in USER_ALLOW_LIST:
         USER_ALLOW_LIST.remove("")
 
+
 def load_regex_filter():
     global REGEX_FILTER
 
@@ -209,6 +217,7 @@ def load_regex_filter():
     while "" in REGEX_FILTER:
         REGEX_FILTER.remove("")
 
+
 def load_word_ignore_list():
     global WORD_IGNORE_LIST
 
@@ -217,6 +226,7 @@ def load_word_ignore_list():
     WORD_IGNORE_LIST = file_content.split("\n")
     while "" in WORD_IGNORE_LIST:
         WORD_IGNORE_LIST.remove("")
+
 
 def run_singlethread():
     while True:
@@ -240,6 +250,7 @@ def run_singlethread():
         if exit_event.is_set():
             break
 
+
 def run_queue_single():
     while True:
         try:
@@ -261,6 +272,7 @@ def run_queue_single():
 
         if exit_event.is_set():
             break
+
 
 def run_multithread():
     while True:
@@ -285,8 +297,10 @@ def run_multithread():
         if exit_event.is_set():
             break
 
+
 def silence_please():
     sa.stop_all()
+
 
 def await_command():
     while True:
@@ -336,6 +350,7 @@ def await_command():
         except Exception as e:
             traceback.print_exc()
 
+
 def exit_application():
     global thread_ping, thread_listen
     sock.close()
@@ -344,6 +359,7 @@ def exit_application():
     thread_ping.join()
     thread_listen.join()
     sys.exit()
+
 
 def start_listen():
     if MODE == 'keepup':
@@ -355,6 +371,7 @@ def start_listen():
     else:
         print('Please select a mode by editing the MODE variable ')
 
+
 # Processes
 thread_ping = threading.Thread(target=ping_sender, args=())
 thread_listen = threading.Thread(target=start_listen, args=())
@@ -363,7 +380,7 @@ thread_listen = threading.Thread(target=start_listen, args=())
 if SILENCE_HOTKEY:
     keyboard.add_hotkey(SILENCE_HOTKEY, silence_please)
 
-if __name__ ==  '__main__':
+if __name__ == '__main__':
     thread_ping.start()
     thread_listen.start()
     await_command()
