@@ -13,18 +13,17 @@ voices = {
 def create_wave(tmp_dir: str, message: str, tts: str = "ms_sam"):
 
     if tts == "dektalk":
-        os.system(f"say.exe -d dtalk_us.dic -w {tmp_dir} [:phoneme on] '{message}'")
-        return
+        cmd_line = f"say.exe -d dtalk_us.dic -w {tmp_dir} [:phoneme on] '{message}'"
+        if os.name != "nt":
+            cmd_line = f"wine {cmd_line}"
 
-    # if tts is not valid voice is empty
-    voice = ""
-    if tts in voices.keys():
-        voice = f"--voice {voices[tts]}"
+    else:
+        # if tts is not valid voice is empty
+        voice = ""
+        if tts in voices.keys():
+            voice = f"--voice {voices[tts]}"
 
-    cmd_line = f'python ms_sam/ms_sam.py {voice} {tmp_dir} "{message}"'
-
-    if os.name != "nt":
-        cmd_line = f"wine {cmd_line}"
+        cmd_line = f'python ms_sam/ms_sam.py {voice} {tmp_dir} "{message}"'
 
     os.system(cmd_line)
 
